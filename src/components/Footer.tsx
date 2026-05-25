@@ -28,7 +28,7 @@ const footerLinks = {
 export default function Footer() {
   return (
     <footer className="bg-brand-black text-white">
-      <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
+      <div className="mx-auto max-w-7xl px-4 pt-12 md:pt-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
             <Image
@@ -68,7 +68,7 @@ export default function Footer() {
           <FooterColumn title="About Us" links={footerLinks.about} />
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 pb-4 md:mt-12 md:flex-row md:pb-5">
           <p className="text-xs text-white/50">
             &copy; {new Date().getFullYear()} {site.name}. All rights reserved.
           </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { inventory } from "@/data/inventory";
 import {
@@ -9,8 +9,10 @@ import {
   parsePrice,
   sortVehicles,
   sortOptions,
-  getUniqueMakes,
+  getMakeModelCatalog,
   getVehicleMake,
+  getVehicleModel,
+  getVehicleSearchText,
   type Category,
   type SortOption,
 } from "@/data/site";
@@ -30,11 +32,40 @@ export default function InventoryBrowser() {
   const category = (searchParams.get("category") as Category) || "all";
   const maxPrice = searchParams.get("max");
   const makeFilter = searchParams.get("make") || "";
+  const selectedModels = useMemo(
+    () => (searchParams.get("models") || "").split(",").filter(Boolean),
+    [searchParams]
+  );
   const sort = (searchParams.get("sort") as SortOption) || "price-desc";
   const search = searchParams.get("q") || "";
 
   const [searchInput, setSearchInput] = useState(search);
-  const makes = useMemo(() => getUniqueMakes(inventory), []);
+  const catalog = useMemo(() => getMakeModelCatalog(inventory), []);
+  const availableModels = makeFilter ? (catalog.modelsByMake[makeFilter] ?? []) : [];
+  const searchQuery = searchInput.trim().toLowerCase();
+
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const next = searchInput.trim();
+      const current = search.trim();
+      if (next === current) return;
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (next) {
+        params.set("q", next);
+      } else {
+        params.delete("q");
+      }
+      const qs = params.toString();
+      router.replace(qs ? `/inventory?${qs}` : "/inventory", { scroll: false });
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput, search, searchParams, router]);
 
   const filtered = useMemo(() => {
     const results = inventory.filter((vehicle) => {
@@ -42,15 +73,12 @@ export default function InventoryBrowser() {
       if (category !== "all" && !cats.includes(category)) return false;
       if (maxPrice && parsePrice(vehicle.price) > parseInt(maxPrice, 10)) return false;
       if (makeFilter && getVehicleMake(vehicle) !== makeFilter) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        const haystack = `${vehicle.title} ${vehicle.trim} ${vehicle.price}`.toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
+      if (selectedModels.length > 0 && !selectedModels.includes(getVehicleModel(vehicle))) return false;
+      if (searchQuery && !getVehicleSearchText(vehicle).includes(searchQuery)) return false;
       return true;
     });
     return sortVehicles(results, sort);
-  }, [category, maxPrice, makeFilter, sort, search]);
+  }, [category, maxPrice, makeFilter, selectedModels, searchQuery, sort]);
 
   const updateParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -71,7 +99,26 @@ export default function InventoryBrowser() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    updateParams({ q: searchInput || null });
+    updateParams({ q: searchInput.trim() || null });
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("q");
+    const qs = params.toString();
+    router.replace(qs ? `/inventory?${qs}` : "/inventory", { scroll: false });
+  };
+
+  const handleMakeChange = (value: string) => {
+    updateParams({ make: value || null, models: null });
+  };
+
+  const toggleModel = (model: string) => {
+    const next = selectedModels.includes(model)
+      ? selectedModels.filter((item) => item !== model)
+      : [...selectedModels, model];
+    updateParams({ models: next.length ? next.join(",") : null });
   };
 
   const clearFilters = () => {
@@ -80,7 +127,13 @@ export default function InventoryBrowser() {
     scrollToTop();
   };
 
-  const hasFilters = category !== "all" || maxPrice || makeFilter || search || sort !== "price-desc";
+  const hasFilters =
+    category !== "all" ||
+    maxPrice ||
+    makeFilter ||
+    selectedModels.length > 0 ||
+    searchQuery ||
+    sort !== "price-desc";
 
   const priceOptions = [
     { label: "Any Price", value: null as string | null },
@@ -110,10 +163,72 @@ export default function InventoryBrowser() {
           </div>
           <div className="space-y-5">
             <FilterSection title="Search">
-              <form onSubmit={handleSearch} className="flex gap-2">
-                <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Make, model, keyword..." className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-red focus:outline-none focus:ring-1 focus:ring-brand-red" />
-                <button type="submit" className="rounded-lg bg-brand-red px-3 py-2 text-sm font-semibold text-white hover:bg-brand-red-dark">Go</button>
+              <form onSubmit={handleSearch} className="space-y-2">
+                <div className="flex overflow-hidden rounded-lg border border-gray-200 focus-within:border-brand-red focus-within:ring-1 focus-within:ring-brand-red">
+                  <span className="flex shrink-0 items-center border-r border-gray-200 bg-gray-50 px-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Search
+                  </span>
+                  <input
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="All inventory — year, make, model, VIN, stock #..."
+                    className="min-w-0 flex-1 border-0 bg-white px-3 py-2 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none"
+                    aria-label="Search all inventory"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-lg bg-brand-red px-3 py-2 text-sm font-semibold text-white hover:bg-brand-red-dark"
+                  >
+                    Search
+                  </button>
+                  {searchInput ? (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                    >
+                      Clear
+                    </button>
+                  ) : null}
+                </div>
+                <p className="text-xs text-gray-500">Searches all {inventory.length} vehicles as you type.</p>
               </form>
+            </FilterSection>
+            <FilterSection title="Make">
+              <select
+                value={makeFilter}
+                onChange={(e) => handleMakeChange(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-red focus:outline-none"
+              >
+                <option value="">All Makes</option>
+                {catalog.makes.map((make) => (
+                  <option key={make} value={make}>
+                    {make} ({catalog.countByMake[make]})
+                  </option>
+                ))}
+              </select>
+              {makeFilter ? (
+                <div className="mt-4 max-h-48 space-y-2 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Models</p>
+                  {availableModels.map((model) => (
+                    <label
+                      key={model}
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm text-gray-700 hover:bg-white"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedModels.includes(model)}
+                        onChange={() => toggleModel(model)}
+                        className="h-4 w-4 rounded border-gray-300 text-brand-red focus:ring-brand-red"
+                      />
+                      <span>{model}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
             </FilterSection>
             <FilterSection title="Category">
               {categories.map((cat) => (
@@ -130,12 +245,6 @@ export default function InventoryBrowser() {
                   </button>
                 ))}
               </div>
-            </FilterSection>
-            <FilterSection title="Make">
-              <select value={makeFilter} onChange={(e) => updateParams({ make: e.target.value || null })} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-red focus:outline-none">
-                <option value="">All Makes</option>
-                {makes.map((make) => (<option key={make} value={make}>{make}</option>))}
-              </select>
             </FilterSection>
           </div>
         </div>

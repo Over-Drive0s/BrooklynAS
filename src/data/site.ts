@@ -239,3 +239,30 @@ export function getMakeModelCatalog(vehicles: Vehicle[]): {
 export function getUniqueMakes(vehicles: Vehicle[]): string[] {
   return getMakeModelCatalog(vehicles).makes;
 }
+
+export function getVehicleSearchText(vehicle: Vehicle): string {
+  return [
+    vehicle.year,
+    vehicle.make,
+    vehicle.model,
+    vehicle.title,
+    vehicle.trim,
+    vehicle.price,
+    vehicle.mileage,
+    vehicle.stock,
+    vehicle.vin,
+    vehicle.drive,
+    vehicle.engine,
+    vehicle.transmission,
+    vehicle.exteriorColor,
+    vehicle.interiorColor,
+    vehicle.bodyStyle,
+    vehicle.fuel,
+    vehicle.description,
+    getVehicleMake(vehicle),
+    getVehicleModel(vehicle),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}

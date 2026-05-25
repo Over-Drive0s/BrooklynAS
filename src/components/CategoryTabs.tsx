@@ -4,13 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { categories, categorizeVehicle, type Category } from "@/data/site";
 import { inventory } from "@/data/inventory";
-import { scrollToTop } from "@/lib/scroll";
 import VehicleCard from "./VehicleCard";
 
 export default function CategoryTabs() {
   const [active, setActive] = useState<Category>("all");
 
-  const filtered = inventory.filter((v) => categorizeVehicle(v).includes(active)).slice(0, 8);
+  const filtered =
+    active === "all"
+      ? inventory.slice(0, 8)
+      : inventory.filter((v) => categorizeVehicle(v).includes(active)).slice(0, 8);
 
   return (
     <section className="py-16 md:py-20">
@@ -26,10 +28,8 @@ export default function CategoryTabs() {
             <button
               key={cat.id}
               type="button"
-              onClick={() => {
-                setActive(cat.id);
-                scrollToTop();
-              }}
+              onClick={() => setActive(cat.id)}
+              aria-pressed={active === cat.id}
               className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
                 active === cat.id
                   ? "bg-brand-red text-white shadow-md"
