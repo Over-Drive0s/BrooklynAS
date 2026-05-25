@@ -38,10 +38,28 @@ export default function Footer() {
               height={271}
               className="h-14 w-auto object-contain md:h-16"
             />
-            <p className="mt-4 text-sm text-white/60">{site.fullAddress}</p>
-            <a href={site.phoneLink} className="mt-2 block text-sm font-semibold text-brand-red-light hover:underline">
-              {site.phone}
-            </a>
+            <div className="mt-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/90">Visit Us</p>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(site.fullAddress)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group mt-2 block"
+              >
+                <address className="not-italic leading-relaxed text-sm text-white/60 transition-colors group-hover:text-white/80">
+                  <span className="block">{site.address}</span>
+                  <span className="block">
+                    {site.city}, {site.state} {site.zip}
+                  </span>
+                </address>
+              </a>
+              <a
+                href={site.phoneLink}
+                className="mt-3 block text-sm font-semibold text-brand-red-light hover:underline"
+              >
+                {site.phone}
+              </a>
+            </div>
           </div>
 
           <FooterColumn title="Shop" links={footerLinks.shop} />
