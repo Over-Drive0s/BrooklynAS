@@ -72,6 +72,17 @@ export default function Footer() {
           <p className="text-xs text-white/50">
             &copy; {new Date().getFullYear()} {site.name}. All rights reserved.
           </p>
+          <p className="text-xs text-white/50">
+            powered by:{" "}
+            <a
+              href="https://overdriveio.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/70 hover:text-white"
+            >
+              overdriveio
+            </a>
+          </p>
           <div className="flex gap-6 text-xs text-white/50">
             <Link href={site.links.privacy} className="hover:text-white">
               Privacy Policy

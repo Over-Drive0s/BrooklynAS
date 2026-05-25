@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { shuffleTestimonials, testimonials, type Testimonial } from "@/data/testimonials";
+
+const LOCAL_REVIEWS_KEY = "brooklyn-as-user-reviews";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -21,27 +23,80 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+function readLocalReviews(): Testimonial[] {
+  try {
+    const stored = localStorage.getItem(LOCAL_REVIEWS_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function mergeReviews(userReviews: Testimonial[]): Testimonial[] {
+  const seen = new Set<string>();
+  const merged: Testimonial[] = [];
+
+  for (const review of [...userReviews, ...testimonials]) {
+    if (seen.has(review.id)) continue;
+    seen.add(review.id);
+    merged.push(review);
+  }
+
+  return shuffleTestimonials(merged);
+}
+
 export default function TestimonialsList() {
   const [reviews, setReviews] = useState<Testimonial[]>(testimonials);
 
-  useEffect(() => {
-    setReviews(shuffleTestimonials(testimonials));
+  const loadReviews = useCallback(async () => {
+    let userReviews: Testimonial[] = readLocalReviews();
+
+    try {
+      const response = await fetch("/api/reviews");
+      if (response.ok) {
+        const apiReviews: Testimonial[] = await response.json();
+        userReviews = [...apiReviews, ...userReviews];
+      }
+    } catch {
+      // Use local reviews only when the API is unavailable.
+    }
+
+    setReviews(mergeReviews(userReviews));
   }, []);
 
+  useEffect(() => {
+    loadReviews();
+
+    const handleReviewSubmitted = () => {
+      loadReviews();
+    };
+
+    window.addEventListener("review-submitted", handleReviewSubmitted);
+    return () => window.removeEventListener("review-submitted", handleReviewSubmitted);
+  }, [loadReviews]);
+
   return (
-    <div className="mt-10 space-y-6">
+    <div className="mt-10 grid gap-6 md:grid-cols-2">
       {reviews.map((review) => (
-        <article key={review.id} className="rounded-xl bg-white p-6 shadow-card md:p-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-brand-black">{review.title}</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                {review.author} · {review.location} · {review.date}
-              </p>
-            </div>
+        <article
+          key={review.id}
+          className="flex flex-col rounded-xl border border-gray-100 bg-white p-6 shadow-card md:p-7"
+        >
+          <div className="flex justify-end">
             <StarRating rating={review.rating} />
           </div>
-          <p className="mt-4 leading-relaxed text-gray-700">&ldquo;{review.text}&rdquo;</p>
+
+          <h2 className="mt-2 text-lg font-bold text-brand-black">{review.title}</h2>
+          <p className="mt-4 flex-1 text-sm leading-relaxed text-gray-700 md:text-base">{review.text}</p>
+
+          <div className="mt-6 border-t border-gray-100 pt-4">
+            <p className="font-semibold text-brand-black">{review.author}</p>
+            <p className="mt-1 text-xs text-gray-500">
+              {review.location} · {review.date}
+            </p>
+          </div>
         </article>
       ))}
     </div>

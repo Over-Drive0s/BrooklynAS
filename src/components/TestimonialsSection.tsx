@@ -70,7 +70,7 @@ export default function TestimonialsSection() {
             >
               <StarRating rating={review.rating} />
               <h3 className="mt-4 text-lg font-bold text-brand-black">{review.title}</h3>
-              <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-700">&ldquo;{review.text}&rdquo;</p>
+              <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-700">{review.text}</p>
               <div className="mt-5 border-t border-gray-200 pt-4">
                 <p className="text-sm font-semibold text-brand-black">{review.author}</p>
                 <p className="text-xs text-gray-500">
