@@ -42,6 +42,7 @@ export const site = {
     store: "/store",
     privacy: "/privacy",
     directions: "/directions",
+    admin: "/admin",
     vehicleFinder: "/vehicle-finder",
   },
   external: {
@@ -58,10 +59,23 @@ export const site = {
 export type Vehicle = {
   id: string;
   slug: string;
+  year: string;
+  make: string;
+  model: string;
   title: string;
   trim: string;
   mileage: string;
   drive: string;
+  stock?: string;
+  vin?: string;
+  engine?: string;
+  transmission?: string;
+  exteriorColor?: string;
+  interiorColor?: string;
+  bodyStyle?: string;
+  fuel?: string;
+  description?: string;
+  images: string[];
   url: string;
   legacyUrl?: string;
   image: string;
@@ -113,7 +127,8 @@ export function parsePrice(price: string): number {
   return parseInt(price.replace(/[^0-9]/g, ""), 10) || 0;
 }
 
-export function parseYear(title: string): number {
+export function parseYear(title: string, year?: string): number {
+  if (year) return parseInt(year, 10) || 0;
   const match = title.match(/\b(19|20)\d{2}\b/);
   return match ? parseInt(match[0], 10) : 0;
 }
@@ -143,20 +158,84 @@ export function sortVehicles(vehicles: Vehicle[], sort: SortOption): Vehicle[] {
   return sorted;
 }
 
-export function getMake(title: string): string {
-  const parts = title.split(" ");
-  if (parts.length >= 2) return parts.slice(1).join(" ").split(" ")[0] === "Mercedes-Benz" ? "Mercedes-Benz" : parts.slice(1).join(" ").split(/(?=\d)/)[0].trim().split(" ")[0];
-  const withoutYear = title.replace(/^\d{4}\s*/, "");
-  return withoutYear.split(" ")[0] || "Other";
+function normalizeVehicleText(text: string): string {
+  return text
+    .replace(/MercedesBenz/g, "Mercedes-Benz")
+    .replace(/RollsRoyce/g, "Rolls-Royce")
+    .replace(/LandRover/g, "Land Rover")
+    .replace(/AstonMartin/g, "Aston Martin")
+    .replace(/AlfaRomeo/g, "Alfa Romeo");
+}
+
+const multiWordMakes = [
+  "Mercedes-Benz",
+  "Mercedes-AMG",
+  "Land Rover",
+  "Aston Martin",
+  "Alfa Romeo",
+  "Lamborghini",
+  "Rolls-Royce",
+  "McLaren",
+  "Bentley",
+  "Ferrari",
+  "Porsche",
+  "Cadillac",
+  "Chevrolet",
+  "Lexus",
+  "Toyota",
+  "Nissan",
+  "Dodge",
+  "Jeep",
+  "Ford",
+  "RAM",
+  "Mazda",
+  "Audi",
+  "BMW",
+];
+
+export function getVehicleMake(vehicle: Vehicle | string): string {
+  if (typeof vehicle !== "string" && vehicle.make) return vehicle.make;
+  const title = typeof vehicle === "string" ? vehicle : vehicle.title;
+  const text = normalizeVehicleText(title.replace(/^\d{4}\s*/, ""));
+  const sorted = [...multiWordMakes].sort((a, b) => b.length - a.length);
+  const found = sorted.find((make) => text.startsWith(make));
+  return found || text.split(" ")[0] || "Other";
+}
+
+export function getVehicleModel(vehicle: Vehicle | string): string {
+  if (typeof vehicle !== "string" && vehicle.model) return vehicle.model;
+  const title = typeof vehicle === "string" ? vehicle : vehicle.title;
+  const make = getVehicleMake(title);
+  const text = normalizeVehicleText(title.replace(/^\d{4}\s*/, ""));
+  return text.slice(make.length).trim();
+}
+
+export function getMakeModelCatalog(vehicles: Vehicle[]): {
+  makes: string[];
+  countByMake: Record<string, number>;
+  modelsByMake: Record<string, string[]>;
+} {
+  const modelsByMake: Record<string, Set<string>> = {};
+  const countByMake: Record<string, number> = {};
+
+  vehicles.forEach((vehicle) => {
+    const make = getVehicleMake(vehicle);
+    const model = getVehicleModel(vehicle);
+    countByMake[make] = (countByMake[make] ?? 0) + 1;
+    if (!modelsByMake[make]) modelsByMake[make] = new Set();
+    if (model) modelsByMake[make].add(model);
+  });
+
+  const makes = Object.keys(modelsByMake).sort();
+  return {
+    makes,
+    countByMake,
+    modelsByMake: Object.fromEntries(
+      makes.map((make) => [make, Array.from(modelsByMake[make]).sort()])
+    ),
+  };
 }
 
 export function getUniqueMakes(vehicles: Vehicle[]): string[] {
-  const makes = new Set<string>();
-  vehicles.forEach((v) => {
-    const text = v.title.replace(/^\d{4}\s*/, "");
-    const known = ["Mercedes-Benz", "Land Rover", "Aston Martin", "Alfa Romeo", "Lamborghini"];
-    const found = known.find((m) => text.startsWith(m));
-    makes.add(found || text.split(" ")[0]);
-  });
-  return Array.from(makes).sort();
+  return getMakeModelCatalog(vehicles).makes;
 }

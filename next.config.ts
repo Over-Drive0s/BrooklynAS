@@ -14,15 +14,22 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    serverComponentsHmrCache: false,
+  },
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {
         poll: 1000,
         aggregateTimeout: 300,
-        ignored: ["**/node_modules/**"],
+        ignored: ["**/node_modules/**", "**/.git/**"],
       };
     }
     return config;
+  },
+  // Keep Next.js from picking up the lockfile in your home folder as the workspace root.
+  turbopack: {
+    root: path.join(__dirname),
   },
 };
 

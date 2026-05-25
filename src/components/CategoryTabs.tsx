@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { categories, categorizeVehicle, type Category } from "@/data/site";
 import { inventory } from "@/data/inventory";
+import { scrollToTop } from "@/lib/scroll";
 import VehicleCard from "./VehicleCard";
 
 export default function CategoryTabs() {
@@ -25,7 +26,10 @@ export default function CategoryTabs() {
             <button
               key={cat.id}
               type="button"
-              onClick={() => setActive(cat.id)}
+              onClick={() => {
+                setActive(cat.id);
+                scrollToTop();
+              }}
               className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
                 active === cat.id
                   ? "bg-brand-red text-white shadow-md"

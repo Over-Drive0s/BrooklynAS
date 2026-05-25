@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import SiteFooter from "@/components/SiteFooter";
+import ScrollToTop from "@/components/ScrollToTop";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import { site } from "@/data/site";
 
 const inter = Inter({
@@ -30,10 +33,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans`}>
+      <body className={`${inter.variable} flex min-h-dvh flex-col font-sans`}>
+        <Suspense fallback={null}>
+          <ScrollToTop />
+        </Suspense>
         <Header />
-        <main>{children}</main>
-        <Footer />
+        <main className="flex flex-1 flex-col">{children}</main>
+        <TestimonialsSection />
+        <SiteFooter />
       </body>
     </html>
   );

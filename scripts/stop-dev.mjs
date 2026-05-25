@@ -12,7 +12,13 @@ function killProjectDevServers() {
     });
 
     for (const line of output.split("\n")) {
-      if (!line.includes("next dev") && !line.includes("next-server")) continue;
+      const isDevProcess =
+        line.includes("next dev") ||
+        line.includes("next-server") ||
+        line.includes("scripts/dev.mjs") ||
+        line.includes("npm exec next dev");
+
+      if (!isDevProcess) continue;
       if (!line.includes(root)) continue;
 
       const pid = Number(line.trim().split(/\s+/)[1]);

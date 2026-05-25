@@ -10,10 +10,12 @@ import {
   sortVehicles,
   sortOptions,
   getUniqueMakes,
+  getVehicleMake,
   type Category,
   type SortOption,
 } from "@/data/site";
 import VehicleCard from "./VehicleCard";
+import { scrollToTop } from "@/lib/scroll";
 
 function filterButtonClass(active: boolean) {
   return active
@@ -39,7 +41,7 @@ export default function InventoryBrowser() {
       const cats = categorizeVehicle(vehicle);
       if (category !== "all" && !cats.includes(category)) return false;
       if (maxPrice && parsePrice(vehicle.price) > parseInt(maxPrice, 10)) return false;
-      if (makeFilter && !vehicle.title.includes(makeFilter)) return false;
+      if (makeFilter && getVehicleMake(vehicle) !== makeFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         const haystack = `${vehicle.title} ${vehicle.trim} ${vehicle.price}`.toLowerCase();
@@ -59,7 +61,8 @@ export default function InventoryBrowser() {
         params.set(key, value);
       }
     });
-    router.push(`/inventory?${params.toString()}`, { scroll: false });
+    router.push(`/inventory?${params.toString()}`);
+    scrollToTop();
   };
 
   const setCategory = (next: Category) => {
@@ -74,6 +77,7 @@ export default function InventoryBrowser() {
   const clearFilters = () => {
     setSearchInput("");
     router.push("/inventory");
+    scrollToTop();
   };
 
   const hasFilters = category !== "all" || maxPrice || makeFilter || search || sort !== "price-desc";

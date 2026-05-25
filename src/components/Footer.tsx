@@ -73,8 +73,15 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} {site.name}. All rights reserved.
           </p>
           <div className="flex gap-6 text-xs text-white/50">
-            <Link href={site.links.privacy} className="hover:text-white">Privacy Policy</Link>
-            <Link href={site.links.directions} className="hover:text-white">Directions</Link>
+            <Link href={site.links.privacy} className="hover:text-white">
+              Privacy Policy
+            </Link>
+            <Link href={site.links.admin} className="hover:text-white">
+              Admin +
+            </Link>
+            <Link href={site.links.directions} className="hover:text-white">
+              Directions
+            </Link>
           </div>
         </div>
       </div>

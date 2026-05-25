@@ -4,18 +4,23 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:clean": "node scripts/dev.mjs --clean",
+    "dev:fast": "node scripts/dev.mjs --fast",
+    "dev:clean": "node scripts/dev.mjs",
+    "dev:reset": "node scripts/stop-dev.mjs && node scripts/dev.mjs",
+    "sync:inventory": "node scripts/sync-inventory.mjs",
     "prebuild": "node scripts/stop-dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

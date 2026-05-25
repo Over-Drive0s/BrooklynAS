@@ -1,14 +1,24 @@
 import { spawn, execSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, rmSync, writeFileSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const clean = process.argv.includes("--clean");
+const fast = process.argv.includes("--fast");
+const pidFile = path.join(root, ".dev-server.pid");
+const port = 3000;
 
-function killPort(port) {
+function sleep(ms) {
   try {
-    const output = execSync(`lsof -ti:${port} 2>/dev/null || true`, {
+    execSync(`sleep ${Math.max(0.1, ms / 1000)}`, { stdio: "ignore" });
+  } catch {
+    // Ignore.
+  }
+}
+
+function killPort(targetPort) {
+  try {
+    const output = execSync(`lsof -ti:${targetPort} 2>/dev/null || true`, {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
@@ -31,6 +41,18 @@ function killPort(port) {
 }
 
 function killProjectDevServers() {
+  if (existsSync(pidFile)) {
+    const oldPid = Number(readFileSync(pidFile, "utf8").trim());
+    if (!Number.isNaN(oldPid) && oldPid !== process.pid) {
+      try {
+        process.kill(oldPid, "SIGKILL");
+      } catch {
+        // Process may already be gone.
+      }
+    }
+    unlinkSync(pidFile);
+  }
+
   try {
     const output = execSync("ps aux 2>/dev/null || true", {
       encoding: "utf8",
@@ -38,11 +60,16 @@ function killProjectDevServers() {
     });
 
     for (const line of output.split("\n")) {
-      if (!line.includes("next dev") && !line.includes("next-server")) continue;
+      const isDevProcess =
+        line.includes("next dev") ||
+        line.includes("next-server") ||
+        line.includes("scripts/dev.mjs") ||
+        line.includes("npm exec next dev");
+
+      if (!isDevProcess) continue;
       if (!line.includes(root)) continue;
 
-      const parts = line.trim().split(/\s+/);
-      const pid = Number(parts[1]);
+      const pid = Number(line.trim().split(/\s+/)[1]);
       if (!Number.isNaN(pid) && pid !== process.pid) {
         try {
           process.kill(pid, "SIGKILL");
@@ -55,33 +82,82 @@ function killProjectDevServers() {
     // ps unavailable; port cleanup below is still enough.
   }
 
-  for (const port of [3000, 3001, 3002]) {
-    killPort(port);
+  for (const targetPort of [3000, 3001, 3002]) {
+    killPort(targetPort);
+  }
+
+  sleep(500);
+}
+
+function clearNextDir() {
+  const nextDir = path.join(root, ".next");
+  if (existsSync(nextDir)) {
+    rmSync(nextDir, { recursive: true, force: true });
+  }
+}
+
+function clearDevCacheOnly() {
+  const nextDir = path.join(root, ".next");
+  if (!existsSync(nextDir)) return;
+
+  for (const dir of ["cache", "static/development", "server"]) {
+    const target = path.join(nextDir, dir);
+    if (existsSync(target)) {
+      rmSync(target, { recursive: true, force: true });
+    }
   }
 }
 
 killProjectDevServers();
 
-if (clean) {
-  const nextDir = path.join(root, ".next");
-  if (existsSync(nextDir)) {
-    rmSync(nextDir, { recursive: true, force: true });
-    console.log("Cleared .next cache");
-  }
+if (fast) {
+  clearDevCacheOnly();
+  console.log("Fast start: cleared dev cache only");
+} else {
+  clearNextDir();
+  console.log("Clean start: cleared .next");
 }
 
-console.log("Starting dev server at http://localhost:3000");
+writeFileSync(pidFile, String(process.pid));
+
+console.log(`Starting dev server at http://127.0.0.1:${port}`);
 
 const nextBin = path.join(root, "node_modules", "next", "dist", "bin", "next");
 
-const child = spawn(process.execPath, [nextBin, "dev", "--port", "3000"], {
-  cwd: root,
-  stdio: "inherit",
-});
+const child = spawn(
+  process.execPath,
+  [nextBin, "dev", "--turbo", "--port", String(port), "--hostname", "127.0.0.1"],
+  {
+    cwd: root,
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      CHOKIDAR_USEPOLLING: "1",
+      WATCHPACK_POLLING: "1",
+      NEXT_TELEMETRY_DISABLED: "1",
+    },
+  }
+);
+
+function cleanup() {
+  try {
+    if (existsSync(pidFile)) unlinkSync(pidFile);
+  } catch {
+    // Ignore cleanup errors.
+  }
+}
 
 child.on("exit", (code) => {
+  cleanup();
   process.exit(code ?? 0);
 });
 
-process.on("SIGINT", () => child.kill("SIGINT"));
-process.on("SIGTERM", () => child.kill("SIGTERM"));
+process.on("SIGINT", () => {
+  child.kill("SIGINT");
+  cleanup();
+});
+
+process.on("SIGTERM", () => {
+  child.kill("SIGTERM");
+  cleanup();
+});
