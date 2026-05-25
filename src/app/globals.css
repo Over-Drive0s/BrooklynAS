@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-brand-gray-dark antialiased;
+  }
+}
+
+@layer components {
+  .nav-link {
+    @apply text-sm font-semibold uppercase tracking-wide text-white/90 transition-colors hover:text-white;
+  }
+
+  .section-heading {
+    @apply text-3xl font-bold tracking-tight text-brand-black md:text-4xl;
+  }
+
+  .section-subheading {
+    @apply mt-3 max-w-2xl text-lg text-gray-600;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-brand-red px-8 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-all hover:bg-brand-red-dark hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-brand-black px-8 py-3 text-sm font-semibold uppercase tracking-wide text-brand-black transition-all hover:bg-brand-black hover:text-white;
+  }
+
+  .vehicle-card {
+    @apply flex flex-col overflow-hidden rounded-xl bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover;
+  }
+}
+
+/* Hide scrollbar for horizontal scroll areas */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
