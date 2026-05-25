@@ -50,6 +50,8 @@ export const site = {
     sellForm: "https://brooklynautoonline.com/we-buy-vehicle",
     locatorForm: "https://brooklynautoonline.com/locatorservice",
     loanCalculator: "https://brooklynautoonline.com/loancalculator",
+    mapEmbed:
+      "https://www.google.com/maps?q=161+Marion+St,+Staten+Island,+NY+10310&hl=en&z=15&output=embed",
   },
 };
 

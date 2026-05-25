@@ -40,16 +40,13 @@ export default function Page() {
             </div>
 
             <div className="overflow-hidden rounded-xl shadow-card lg:sticky lg:top-36">
-              <div className="aspect-[4/3] min-h-[320px] lg:aspect-auto lg:min-h-[480px]">
-                <iframe
-                  title="Brooklyn Auto Sales Map"
-                  src="https://maps.google.com/maps?q=161+Marion+St+Staten+Island+NY+10310&output=embed"
-                  className="h-full w-full border-0"
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
+              <iframe
+                title="Brooklyn Auto Sales Map"
+                src={site.external.mapEmbed}
+                className="block h-[320px] w-full border-0 sm:h-[400px] lg:h-[480px]"
+                loading="lazy"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>

@@ -16,9 +16,10 @@ export default function Page() {
           <div className="mt-8 aspect-video overflow-hidden rounded-xl shadow-card">
             <iframe
               title="Brooklyn Auto Sales Map"
-              src="https://maps.google.com/maps?q=161+Marion+St+Staten+Island+NY+10310&output=embed"
+              src={site.external.mapEmbed}
               className="h-full w-full border-0"
               loading="lazy"
+              allowFullScreen
             />
           </div>
         </div>
