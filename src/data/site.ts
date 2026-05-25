@@ -40,7 +40,6 @@ export const site = {
     testimonials: "/testimonials",
     about: "/about",
     store: "/store",
-    staff: "/staff",
     privacy: "/privacy",
     directions: "/directions",
     vehicleFinder: "/vehicle-finder",

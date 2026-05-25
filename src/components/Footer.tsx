@@ -19,8 +19,7 @@ const footerLinks = {
   ],
   about: [
     { label: "About Us", href: site.links.about },
-    { label: "Store Info", href: site.links.store },
-    { label: "Meet Our Staff", href: site.links.staff },
+    { label: "Contact Us", href: site.links.store },
     { label: "Testimonials", href: site.links.testimonials },
     { label: "Privacy Policy", href: site.links.privacy },
   ],

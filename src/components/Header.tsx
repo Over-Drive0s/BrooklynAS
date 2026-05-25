@@ -46,9 +46,8 @@ const navItems: NavItem[] = [
     label: "Our Store",
     href: site.links.store,
     children: [
-      { label: "Store Info", href: site.links.store },
+      { label: "Contact Us", href: site.links.store },
       { label: "About Us", href: site.links.about },
-      { label: "Meet Our Staff", href: site.links.staff },
       { label: "Directions", href: site.links.directions },
     ],
   },
@@ -72,7 +71,7 @@ export default function Header() {
               {site.fullAddress}
             </span>
           </div>
-          <Link href={site.links.directions} className="hover:text-white">
+          <Link href={site.links.store} className="hover:text-white">
             Hours & Directions
           </Link>
         </div>

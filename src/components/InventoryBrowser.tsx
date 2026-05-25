@@ -86,7 +86,14 @@ export default function InventoryBrowser() {
   ];
 
   return (
-    <div className="flex flex-col gap-8 lg:flex-row">
+    <div className="flex flex-col gap-8">
+      <div>
+        <h1 className="text-3xl font-bold text-brand-black md:text-4xl">Shop Pre-Owned Vehicles</h1>
+        <p className="mt-3 max-w-2xl text-lg text-gray-600">
+          Explore our complete inventory of luxury, sports, and everyday vehicles at Brooklyn Auto Sales.
+        </p>
+      </div>
+      <div className="flex flex-col gap-8 lg:flex-row">
       <aside className="w-full shrink-0 lg:w-72">
         <div className="sticky top-36 rounded-xl bg-white p-6 shadow-card">
           <div className="mb-5 flex items-center justify-between">
@@ -148,6 +155,7 @@ export default function InventoryBrowser() {
             <button type="button" onClick={clearFilters} className="btn-primary mt-4">View All Inventory</button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
